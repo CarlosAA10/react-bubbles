@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
+
+import { axiosWithAuth } from "../utils/axiosWithAuth";
+import { useParams } from "react-router-dom";
 
 const initialColor = {
   color: "",
@@ -10,6 +12,7 @@ const ColorList = ({ colors, updateColors }) => {
   console.log(colors);
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
+  const { id } = useParams(); 
 
   const editColor = color => {
     setEditing(true);
@@ -21,10 +24,49 @@ const ColorList = ({ colors, updateColors }) => {
     // Make a put request to save your updated color
     // think about where will you get the id from...
     // where is is saved right now?
+
+    axiosWithAuth()
+    .put(`/api/colors/${id}`, colorToEdit)
+    .then(res => {
+      console.log('the new color', res.data)
+      // updateColors([res.data]);
+      console.log(colors)
+
+      const bubbleList = colors.map(bubble => {
+        if (bubble.id === res.data.id) {
+          return (bubble = res.data)
+        }
+        return bubble
+      })
+
+      updateColors(bubbleList); 
+    })
+    .catch(err => {
+      console.log(err); 
+    })
   };
+
 
   const deleteColor = color => {
     // make a delete request to delete this color
+    axiosWithAuth()
+    .delete(`/api/colors/${color.id}`, color)
+    .then(res => {
+      console.log(res)
+      console.log(color); 
+      const bubbleList = colors.map(bubble => {
+        console.log('the bubble',bubble.id)
+        if (bubble.id !== res.data) {
+          return bubble
+        }
+      })
+
+      console.log(bubbleList); 
+      updateColors(bubbleList); 
+    })
+    .catch(err => {
+      console.log(err)
+    })
   };
 
   return (
@@ -75,7 +117,7 @@ const ColorList = ({ colors, updateColors }) => {
             />
           </label>
           <div className="button-row">
-            <button type="submit">save</button>
+            <button  type="submit">save</button>
             <button onClick={() => setEditing(false)}>cancel</button>
           </div>
         </form>
